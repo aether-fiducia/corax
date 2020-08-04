@@ -40,7 +40,7 @@ impl EventHandler for Handler {
                     .unwrap();
                 let response = MessageBuilder::new()
                     .push("Hey ")
-                    .push(words.nth(im_pos + 1).unwrap())
+                    .push(words.nth(im_pos).unwrap())
                     .push(" (")
                     .mention(&mes.author)
                     .push(") , I'm daddy! O.o")
