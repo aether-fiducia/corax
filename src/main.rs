@@ -15,13 +15,20 @@ struct Handler;
 impl EventHandler for Handler {
 
     fn message(&self, ctx: Context, mes: Message) {
-        
+
         if mes.author.bot != true {
             if mes.content.contains("!players") {
                 if let Err(err) = mes.channel_id.say(ctx.http,
                                         format!("{} out of 20 players online.",
                                         query_players("corvuscorax.org:25565").unwrap())) {
                     println!("{:?}", err);
+                }
+            }
+            else if mes.content.contains("I'm") {
+                if let Err(e) = mes.channel_id.say(ctx.http,
+                                      format!("Hey {}, I'm your daddy! O.o",
+                                          mes.author.name)) {
+                    println!("{}", e);
                 }
             }
         }
@@ -45,7 +52,7 @@ fn main() {
         .expect("Failed to establish a connection to the API");
 }
 
-// Never workin
+// Never workin, except maybe now
 fn query_players(addr: &str) -> Result<String, std::io::Error> {
     let mut stream = match TcpStream::connect(&addr) {
         Ok(s) => s,
