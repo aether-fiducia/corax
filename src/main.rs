@@ -35,8 +35,8 @@ impl EventHandler for Handler {
                         return;
                     },
                 };
-                let words = mes.content.split(' ');
-                let im_pos = words.find(|w| w == &"I'm")
+                let mut words = mes.content.split(' ');
+                let im_pos = words.position(|w| w == "I'm")
                     .unwrap();
                 let response = MessageBuilder::new()
                     .push("Hey ")
