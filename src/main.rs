@@ -35,10 +35,15 @@ impl EventHandler for Handler {
                         return;
                     },
                 };
+                let words = mes.content.split(' ');
+                let im_pos = words.find(|w| w == &"I'm")
+                    .unwrap();
                 let response = MessageBuilder::new()
                     .push("Hey ")
+                    .push(words.nth(im_pos + 1).unwrap())
+                    .push(" (")
                     .mention(&mes.author)
-                    .push(" , I'm daddy! O.o")
+                    .push(") , I'm daddy! O.o")
                     .build();
                 if let Err(e) = mes.channel_id.say(&ctx.http, &response) {
                     println!("{}", e);
