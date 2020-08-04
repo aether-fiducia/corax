@@ -5,6 +5,7 @@ use std::io::prelude::*;
 use serenity::{
     prelude::*,
     model::prelude::*,
+    utils::MessageBuilder,
 };
 
 //Build a simple struct to impl the EventHandler trait on
@@ -23,11 +24,23 @@ impl EventHandler for Handler {
                                         query_players("corvuscorax.org:25565").unwrap())) {
                     println!("{:?}", err);
                 }
+
             }
+
             else if mes.content.contains("I'm") {
-                if let Err(e) = mes.channel_id.say(ctx.http,
-                                      format!("Hey {}, I'm your daddy! O.o",
-                                          mes.author.name)) {
+                let channel = match msg.channel_id.to_channel(&ctx) {
+                    Ok(channel) => channel,
+                    Err(why) => {
+                        println!("Error getting channel: {:?}", why);
+                        return;
+                    },
+                };
+                let response = MessageBuilder::new()
+                    .push("Hey ")
+                    .mention(&msg.author.name)
+                    .push(" , I'm daddy! O.o")
+                    .build();
+                if let Err(e) = msg.channel_id.say(&ctx.http, &response) {
                     println!("{}", e);
                 }
             }
