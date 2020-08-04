@@ -28,7 +28,7 @@ impl EventHandler for Handler {
             }
 
             else if mes.content.contains("I'm") {
-                let channel = match msg.channel_id.to_channel(&ctx) {
+                let _ = match mes.channel_id.to_channel(&ctx) {
                     Ok(channel) => channel,
                     Err(why) => {
                         println!("Error getting channel: {:?}", why);
@@ -37,10 +37,10 @@ impl EventHandler for Handler {
                 };
                 let response = MessageBuilder::new()
                     .push("Hey ")
-                    .mention(&msg.author.name)
+                    .mention(&mes.author)
                     .push(" , I'm daddy! O.o")
                     .build();
-                if let Err(e) = msg.channel_id.say(&ctx.http, &response) {
+                if let Err(e) = mes.channel_id.say(&ctx.http, &response) {
                     println!("{}", e);
                 }
             }
