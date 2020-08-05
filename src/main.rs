@@ -42,7 +42,41 @@ impl EventHandler for Handler {
                 }
 
             }
-
+            else if mes.content.contains("!clear") {
+                let guild = match mes.channel_id.to_channel(&ctx) {
+                    Err(e) => {
+                        println!("{:?}", e);
+                        return;
+                    },
+                    Ok(c) => {
+                        match c.guild() {
+                            None => {
+                                println!("Failed to get GuildChannel");
+                                return;
+                            },
+                            Some(gc) => gc,
+                        }
+                    },
+                };
+                println!("Clear guild channel obtained");
+                let messages = match guild.read().messages(&ctx.http, |builder| {
+                    builder.before(&mes.id).limit(100)
+                }) {
+                    Err(e) => {
+                        println!("{}", e);
+                        return;
+                    },
+                    Ok(mess) => mess,
+                };
+                println!("Messages obtained!");
+                for line in messages {
+                    println!("Message to delete\n{:?}\n", line);
+                    if line.content.starts_with(|c| c == '!' || c == '-') || line.author.bot {
+                        line.delete(&ctx.http).unwrap();
+                        println!("{:?}\nHAS BEEN DELETED!", line);
+                    }
+                }
+            }
             else if mes.content.contains("I'm") {
                 let _ = match mes.channel_id.to_channel(&ctx) {
                     Ok(channel) => channel,
@@ -63,41 +97,6 @@ impl EventHandler for Handler {
                     .build();
                 if let Err(e) = mes.channel_id.say(&ctx.http, &response) {
                     println!("{}", e);
-                }
-            }
-            else if mes.content.contains("!clear") {
-                let guild = match mes.channel_id.to_channel(&ctx) {
-                    Err(e) => {
-                        eprintln!("{:?}", e);
-                        return;
-                    },
-                    Ok(c) => {
-                        match c.guild() {
-                            None => {
-                                eprintln!("Failed to get GuildChannel");
-                                return;
-                            },
-                            Some(gc) => gc,
-                        }
-                    },
-                };
-                println!("Clear guild channel obtained");
-                let messages = match guild.read().messages(&ctx.http, |builder| {
-                    builder.before(&mes.id).limit(100)
-                }) {
-                    Err(e) => {
-                        eprintln!("{}", e);
-                        return;
-                    },
-                    Ok(mess) => mess,
-                };
-                println!("Messages obtained!");
-                for line in messages {
-                    println!("Message to delete\n{:?}\n", line);
-                    if line.content.starts_with(|c| c == '!' || c == '-') || line.author.bot {
-                        line.delete(&ctx.http).unwrap();
-                        println!("{:?}\nHAS BEEN DELETED!", line);
-                    }
                 }
             }
         }
@@ -140,7 +139,7 @@ fn main() {
 //        .group(&GENNERAL_GROUP));
 
     let _ = client.start()
-        .map_err(|why| eprintln!("Failed to establish a connection to the API: {:?}", why));
+        .map_err(|why| println!("Failed to establish a connection to the API: {:?}", why));
 
 }
 
