@@ -139,7 +139,7 @@ fn main() {
 //            .prefix("!"))
 //        .group(&GENNERAL_GROUP));
 
-    client.start()
+    let _ = client.start()
         .map_err(|why| eprintln!("Failed to establish a connection to the API: {:?}", why));
 
 }
