@@ -1,11 +1,27 @@
-use std::env;
-use std::net::TcpStream;
-use std::io::prelude::*;
+#![allow(unused_imports, dead_code)]
+
+use std::{
+    env,
+    net::TcpStream,
+    io::prelude::*,
+    sync::Arc,
+};
 
 use serenity::{
     prelude::*,
     model::prelude::*,
     utils::MessageBuilder,
+    client::bridge::voice::ClientVoiceManager,
+    voice,
+    framework::{
+        StandardFramework,
+        standard::{
+            Args,
+            CommandResult,
+            macros::{command, group},
+        },
+    },
+    Result as SerenityResult,
 };
 
 //Build a simple struct to impl the EventHandler trait on
@@ -49,6 +65,37 @@ impl EventHandler for Handler {
                     println!("{}", e);
                 }
             }
+            else if mes.content.contains("!clear") {
+                let guild = match mes.channel_id.to_channel(&ctx) {
+                    Err(e) => {
+                        eprintln!("{:?}", e);
+                        return;
+                    },
+                    Ok(c) => {
+                        match c.guild() {
+                            None => {
+                                eprintln!("Failed to get GuildChannel");
+                                return;
+                            },
+                            Some(gc) => gc,
+                        }
+                    },
+                };
+                let messages = match guild.read().messages(&ctx.http, |builder| {
+                    builder.before(&mes.id).limit(100)
+                }) {
+                    Err(e) => {
+                        eprintln!("{}", e);
+                        return;
+                    },
+                    Ok(mess) => mess,
+                };
+                for line in messages {
+                    if line.content.starts_with(|c| c == '!' || c == '-') || line.author.bot {
+                        line.delete(&ctx.http).unwrap();
+                    }
+                }
+            }
         }
     }
 
@@ -58,6 +105,18 @@ impl EventHandler for Handler {
     }
 }
 
+//#[group]
+//#[commands(join, leave, play)]
+struct Genneral;
+
+struct VoiceManager;
+
+impl TypeMapKey for VoiceManager {
+    type Value = Arc<Mutex<ClientVoiceManager>>;
+}
+
+
+
 //Full of panics! for good reason, all these should halt startup
 fn main() {
     let token = env::var("TOKEN")
@@ -66,8 +125,19 @@ fn main() {
     let mut client = Client::new(&token, Handler)
         .expect("Could not create client!");
 
+    {
+        let mut data = client.data.write();
+        data.insert::<VoiceManager>(Arc::clone(&client.voice_manager));
+    }
+
+//    client.with_framework(StandardFramework::new()
+//        .configure(|c| c
+//            .prefix("!"))
+//        .group(&GENNERAL_GROUP));
+
     client.start()
-        .expect("Failed to establish a connection to the API");
+        .map_err(|why| eprintln!("Failed to establish a connection to the API: {:?}", why));
+
 }
 
 // Never workin, except maybe now
