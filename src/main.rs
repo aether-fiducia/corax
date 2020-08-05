@@ -58,7 +58,6 @@ impl EventHandler for Handler {
                         }
                     },
                 };
-                println!("Clear guild channel obtained");
                 let messages = match guild.read().messages(&ctx.http, |builder| {
                     builder.before(&mes.id).limit(100)
                 }) {
@@ -68,12 +67,9 @@ impl EventHandler for Handler {
                     },
                     Ok(mess) => mess,
                 };
-                println!("Messages obtained!");
                 for line in messages {
-                    println!("Message to delete\n{:?}\n", line);
                     if line.content.starts_with(|c| c == '!' || c == '-') || line.author.bot {
                         line.delete(&ctx.http).unwrap();
-                        println!("{:?}\nHAS BEEN DELETED!", line);
                     }
                 }
             }
