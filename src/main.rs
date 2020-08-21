@@ -1,11 +1,12 @@
 #![allow(unused_imports, dead_code)]
 
+mod thread;
+
 use std::{
     env,
     net::TcpStream,
     io::prelude::*,
     sync::Arc,
-    thread,
 };
 
 use serenity::{
