@@ -5,6 +5,7 @@ use std::{
     net::TcpStream,
     io::prelude::*,
     sync::Arc,
+    thread,
 };
 
 use serenity::{
@@ -42,6 +43,7 @@ impl EventHandler for Handler {
                 }
 
             }
+
             else if mes.content.contains("!clear") {
                 let guild = match mes.channel_id.to_channel(&ctx) {
                     Err(e) => {
@@ -58,6 +60,7 @@ impl EventHandler for Handler {
                         }
                     },
                 };
+
                 let messages = match guild.read().messages(&ctx.http, |builder| {
                     builder.before(&mes.id).limit(100)
                 }) {
@@ -67,12 +70,17 @@ impl EventHandler for Handler {
                     },
                     Ok(mess) => mess,
                 };
+
                 for line in messages {
-                    if line.content.starts_with(|c| c == '!' || c == '-') || line.author.bot {
-                        line.delete(&ctx.http).unwrap();
+                    // let line = Arc::new(rawLine);
+                    // thread::spawn(|| {
+                    // Honestly you gotta figure this shit out
+                        if line.clone().content.starts_with(|c| c == '!' || c == '-') || line.author.bot {
+                            line.clone().delete(&ctx.http).unwrap();
+                        }
                     }
                 }
-            }
+
             else if mes.content.contains("I'm") {
                 let _ = match mes.channel_id.to_channel(&ctx) {
                     Ok(channel) => channel,
@@ -81,9 +89,11 @@ impl EventHandler for Handler {
                         return;
                     },
                 };
+
                 let mut words = mes.content.split(' ');
                 let im_pos = words.position(|w| w == "I'm")
                     .unwrap();
+
                 let response = MessageBuilder::new()
                     .push("Hey ")
                     .push(words.nth(im_pos).unwrap())
@@ -91,6 +101,7 @@ impl EventHandler for Handler {
                     .mention(&mes.author)
                     .push(") , I'm daddy! O.o")
                     .build();
+
                 if let Err(e) = mes.channel_id.say(&ctx.http, &response) {
                     println!("{}", e);
                 }
@@ -106,7 +117,7 @@ impl EventHandler for Handler {
 
 //#[group]
 //#[commands(join, leave, play)]
-struct Genneral;
+struct General;
 
 struct VoiceManager;
 
@@ -119,7 +130,7 @@ impl TypeMapKey for VoiceManager {
 //Full of panics! for good reason, all these should halt startup
 fn main() {
     let token = env::var("TOKEN")
-        .expect("Expected a token!\nFormat - $env:TOKEN=TOKEN_HERE\n");
+        .expect("Expected a token!\nFormat: export TOKEN=\"$(TOKEN_SUB_COMMAND)\"\n");
 
     let mut client = Client::new(&token, Handler)
         .expect("Could not create client!");
@@ -132,12 +143,14 @@ fn main() {
 //    client.with_framework(StandardFramework::new()
 //        .configure(|c| c
 //            .prefix("!"))
-//        .group(&GENNERAL_GROUP));
+//        .group(&GENERAL_GROUP));
 
     let _ = client.start()
         .map_err(|why| println!("Failed to establish a connection to the API: {:?}", why));
 
 }
+
+
 
 // Never workin, except maybe now
 fn query_players(addr: &str) -> Result<String, std::io::Error> {
